@@ -9,5 +9,13 @@ namespace ProductManagementAPI.Models
         public int Quantity { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+
+        // Foreign Keys
+        public int CategoryId { get; set; }
+        public int SupplierId { get; set; }
+
+        // Navigation Properties
+        public Category? Category { get; set; }
+        public Supplier? Supplier { get; set; }
     }
 }
