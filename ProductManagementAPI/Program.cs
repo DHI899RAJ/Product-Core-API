@@ -22,7 +22,7 @@ try
     // Add Database Context
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
+        options.UseSqlite(connectionString));
 
     // Add services to the container
     builder.Services.AddCors(options =>
@@ -67,7 +67,7 @@ try
     builder.Services.AddScoped<IDeliveryService, DeliveryService>();
     builder.Services.AddScoped<IInventoryService, InventoryService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
-    builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
+    builder.Services.AddScoped<IRequestLoggingService, RequestLoggingService>();
 
     var app = builder.Build();
 
