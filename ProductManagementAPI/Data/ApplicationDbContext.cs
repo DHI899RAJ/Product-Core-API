@@ -12,6 +12,7 @@ namespace ProductManagementAPI.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<RequestLog> RequestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

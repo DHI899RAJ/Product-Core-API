@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductManagementAPI.Interfaces;
 using ProductManagementAPI.Models;
 using ProductManagementAPI.Models.DTOs;
+using AutoMapper;
 
 namespace ProductManagementAPI.Controllers
 {
@@ -10,11 +11,13 @@ namespace ProductManagementAPI.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _productService;
+        private readonly IMapper _mapper;
         private readonly ILogger<ProductsController> _logger;
 
-        public ProductsController(IProductService productService, ILogger<ProductsController> logger)
+        public ProductsController(IProductService productService, IMapper mapper, ILogger<ProductsController> logger)
         {
             _productService = productService;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -27,7 +30,7 @@ namespace ProductManagementAPI.Controllers
         {
             _logger.LogInformation("Fetching all products");
             var products = await _productService.GetAllProductsAsync();
-            var responseDtos = products.Select(MapToResponseDto);
+            var responseDtos = _mapper.Map<IEnumerable<ProductResponseDto>>(products);
             return Ok(responseDtos);
         }
 
@@ -48,7 +51,8 @@ namespace ProductManagementAPI.Controllers
                 return NotFound();
             }
 
-            return Ok(MapToResponseDto(product));
+            var responseDto = _mapper.Map<ProductResponseDto>(product);
+            return Ok(responseDto);
         }
 
         /// <summary>
@@ -62,9 +66,9 @@ namespace ProductManagementAPI.Controllers
             try
             {
                 _logger.LogInformation("Creating new product: {ProductName}", productDto.Name);
-                var product = MapToEntity(productDto);
+                var product = _mapper.Map<Product>(productDto);
                 var createdProduct = await _productService.CreateProductAsync(product);
-                var responseDto = MapToResponseDto(createdProduct);
+                var responseDto = _mapper.Map<ProductResponseDto>(createdProduct);
                 return CreatedAtAction(nameof(GetProductById), new { id = responseDto.Id }, responseDto);
             }
             catch (ArgumentException ex)
@@ -86,7 +90,7 @@ namespace ProductManagementAPI.Controllers
             try
             {
                 _logger.LogInformation("Updating product with ID: {ProductId}", id);
-                var product = MapToEntity(productDto);
+                var product = _mapper.Map<Product>(productDto);
                 var updated = await _productService.UpdateProductAsync(id, product);
 
                 if (!updated)
@@ -127,49 +131,6 @@ namespace ProductManagementAPI.Controllers
             }
 
             return NoContent();
-        }
-
-        // Manual mapping methods
-        private Product MapToEntity(ProductCreateDto dto)
-        {
-            return new Product
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-                Price = dto.Price,
-                Quantity = dto.Quantity,
-                CategoryId = dto.CategoryId,
-                SupplierId = dto.SupplierId
-            };
-        }
-
-        private Product MapToEntity(ProductUpdateDto dto)
-        {
-            return new Product
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-                Price = dto.Price,
-                Quantity = dto.Quantity,
-                CategoryId = dto.CategoryId,
-                SupplierId = dto.SupplierId
-            };
-        }
-
-        private ProductResponseDto MapToResponseDto(Product product)
-        {
-            return new ProductResponseDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                Quantity = product.Quantity,
-                CategoryId = product.CategoryId,
-                SupplierId = product.SupplierId,
-                CreatedAt = product.CreatedAt,
-                UpdatedAt = product.UpdatedAt
-            };
         }
     }
 }
