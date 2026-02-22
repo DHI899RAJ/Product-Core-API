@@ -1,4 +1,3 @@
-using ProductManagementAPI.Data;
 using ProductManagementAPI.Interfaces;
 using ProductManagementAPI.Models;
 
@@ -6,9 +5,9 @@ namespace ProductManagementAPI.Services
 {
     public class ProductService : IProductService
     {
-        private readonly ProductRepository _repository;
+        private readonly IRepository<Product> _repository;
 
-        public ProductService(ProductRepository repository)
+        public ProductService(IRepository<Product> repository)
         {
             _repository = repository;
         }

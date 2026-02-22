@@ -1,6 +1,7 @@
 using ProductManagementAPI.Data;
 using ProductManagementAPI.Interfaces;
 using ProductManagementAPI.Services;
+using ProductManagementAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,8 +34,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Register application services
-builder.Services.AddScoped<ProductRepository>();
+// Register repository and application services
+builder.Services.AddScoped<IRepository<Product>, Repository<Product>>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
