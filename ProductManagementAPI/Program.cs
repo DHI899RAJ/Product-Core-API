@@ -52,8 +52,21 @@ try
 
     // Register repositories and services
     builder.Services.AddScoped<IRepository<Product>, Repository<Product>>();
+    builder.Services.AddScoped<IRepository<Category>, Repository<Category>>();
+    builder.Services.AddScoped<IRepository<Order>, Repository<Order>>();
+    builder.Services.AddScoped<IRepository<OrderItem>, Repository<OrderItem>>();
+    builder.Services.AddScoped<IRepository<Delivery>, Repository<Delivery>>();
+    builder.Services.AddScoped<IRepository<Inventory>, Repository<Inventory>>();
+    builder.Services.AddScoped<IRepository<Payment>, Repository<Payment>>();
     builder.Services.AddScoped<IRepository<RequestLog>, Repository<RequestLog>>();
+    
+    // Register domain services
     builder.Services.AddScoped<IProductService, ProductService>();
+    builder.Services.AddScoped<ICategoryService, CategoryService>();
+    builder.Services.AddScoped<IOrderService, OrderService>();
+    builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+    builder.Services.AddScoped<IInventoryService, InventoryService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
 
     var app = builder.Build();
