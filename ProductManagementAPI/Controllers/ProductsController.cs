@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductManagementAPI.Interfaces;
 using ProductManagementAPI.Models;
+using ProductManagementAPI.Models.DTOs;
 
 namespace ProductManagementAPI.Controllers
 {
@@ -22,11 +23,12 @@ namespace ProductManagementAPI.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
+        public async Task<ActionResult<IEnumerable<ProductResponseDto>>> GetAllProducts()
         {
             _logger.LogInformation("Fetching all products");
             var products = await _productService.GetAllProductsAsync();
-            return Ok(products);
+            var responseDtos = products.Select(MapToResponseDto);
+            return Ok(responseDtos);
         }
 
         /// <summary>
@@ -35,7 +37,7 @@ namespace ProductManagementAPI.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Product>> GetProductById(int id)
+        public async Task<ActionResult<ProductResponseDto>> GetProductById(int id)
         {
             _logger.LogInformation("Fetching product with ID: {ProductId}", id);
             var product = await _productService.GetProductByIdAsync(id);
@@ -46,7 +48,7 @@ namespace ProductManagementAPI.Controllers
                 return NotFound();
             }
 
-            return Ok(product);
+            return Ok(MapToResponseDto(product));
         }
 
         /// <summary>
@@ -55,13 +57,15 @@ namespace ProductManagementAPI.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<ActionResult<ProductResponseDto>> CreateProduct(ProductCreateDto productDto)
         {
             try
             {
-                _logger.LogInformation("Creating new product: {ProductName}", product.Name);
+                _logger.LogInformation("Creating new product: {ProductName}", productDto.Name);
+                var product = MapToEntity(productDto);
                 var createdProduct = await _productService.CreateProductAsync(product);
-                return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
+                var responseDto = MapToResponseDto(createdProduct);
+                return CreatedAtAction(nameof(GetProductById), new { id = responseDto.Id }, responseDto);
             }
             catch (ArgumentException ex)
             {
@@ -77,11 +81,12 @@ namespace ProductManagementAPI.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateProduct(int id, Product product)
+        public async Task<IActionResult> UpdateProduct(int id, ProductUpdateDto productDto)
         {
             try
             {
                 _logger.LogInformation("Updating product with ID: {ProductId}", id);
+                var product = MapToEntity(productDto);
                 var updated = await _productService.UpdateProductAsync(id, product);
 
                 if (!updated)
@@ -96,6 +101,11 @@ namespace ProductManagementAPI.Controllers
             {
                 _logger.LogError("Validation error: {Message}", ex.Message);
                 return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Product not found: {Message}", ex.Message);
+                return NotFound(ex.Message);
             }
         }
 
@@ -117,6 +127,49 @@ namespace ProductManagementAPI.Controllers
             }
 
             return NoContent();
+        }
+
+        // Manual mapping methods
+        private Product MapToEntity(ProductCreateDto dto)
+        {
+            return new Product
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Price = dto.Price,
+                Quantity = dto.Quantity,
+                CategoryId = dto.CategoryId,
+                SupplierId = dto.SupplierId
+            };
+        }
+
+        private Product MapToEntity(ProductUpdateDto dto)
+        {
+            return new Product
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Price = dto.Price,
+                Quantity = dto.Quantity,
+                CategoryId = dto.CategoryId,
+                SupplierId = dto.SupplierId
+            };
+        }
+
+        private ProductResponseDto MapToResponseDto(Product product)
+        {
+            return new ProductResponseDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Quantity = product.Quantity,
+                CategoryId = product.CategoryId,
+                SupplierId = product.SupplierId,
+                CreatedAt = product.CreatedAt,
+                UpdatedAt = product.UpdatedAt
+            };
         }
     }
 }

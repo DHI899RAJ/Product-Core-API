@@ -27,12 +27,9 @@ namespace ProductManagementAPI.Services
 
         public async Task<Product> CreateProductAsync(Product product)
         {
-            if (string.IsNullOrWhiteSpace(product.Name))
-                throw new ArgumentException("Product name is required", nameof(product.Name));
+            ValidateProduct(product);
 
-            if (product.Price < 0)
-                throw new ArgumentException("Price cannot be negative", nameof(product.Price));
-
+            product.CreatedAt = DateTime.UtcNow;
             return await _repository.AddAsync(product);
         }
 
@@ -41,8 +38,13 @@ namespace ProductManagementAPI.Services
             if (id <= 0)
                 throw new ArgumentException("Id must be greater than 0", nameof(id));
 
-            if (string.IsNullOrWhiteSpace(product.Name))
-                throw new ArgumentException("Product name is required", nameof(product.Name));
+            // Verify product exists
+            var existingProduct = await _repository.GetByIdAsync(id);
+            if (existingProduct == null)
+                throw new InvalidOperationException($"Product with ID {id} not found");
+
+            ValidateProduct(product);
+            product.UpdatedAt = DateTime.UtcNow;
 
             return await _repository.UpdateAsync(id, product);
         }
@@ -53,6 +55,30 @@ namespace ProductManagementAPI.Services
                 throw new ArgumentException("Id must be greater than 0", nameof(id));
 
             return await _repository.DeleteAsync(id);
+        }
+
+        private void ValidateProduct(Product product)
+        {
+            if (product == null)
+                throw new ArgumentNullException(nameof(product));
+
+            if (string.IsNullOrWhiteSpace(product.Name))
+                throw new ArgumentException("Product name is required", nameof(product.Name));
+
+            if (product.Name.Length > 200)
+                throw new ArgumentException("Product name cannot exceed 200 characters", nameof(product.Name));
+
+            if (product.Price < 0)
+                throw new ArgumentException("Price cannot be negative", nameof(product.Price));
+
+            if (product.Quantity < 0)
+                throw new ArgumentException("Quantity cannot be negative", nameof(product.Quantity));
+
+            if (product.CategoryId <= 0)
+                throw new ArgumentException("Valid category is required", nameof(product.CategoryId));
+
+            if (product.SupplierId <= 0)
+                throw new ArgumentException("Valid supplier is required", nameof(product.SupplierId));
         }
     }
 }
